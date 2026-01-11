@@ -35,5 +35,6 @@ def get_shows_list() -> list[ShowModel]:
     return results
 
 
-if __name__ == "__main__":
-    print(get_shows_list())
+# if __name__ == "__main__":
+# for x in get_shows_list():
+#     print(x.name)
