@@ -1,8 +1,8 @@
-from app.scrape import get_shows_list
+from app.scrape import get_show_by_slug
 
 
 def main():
-    print(get_shows_list())
+    print(get_show_by_slug("detective-conan"))
 
 
 if __name__ == "__main__":

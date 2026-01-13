@@ -6,7 +6,6 @@ class InfoModel(BaseModel):
     show_name: str
     total_episodes: int
     total_fillers: int
-    cover_image: str
     last_episode_aired_at: int
     last_updated_at: int
     url: str
@@ -31,6 +30,7 @@ class EpisodeModel(BaseModel):
     title: str
     type: EpisodeType
     aired_at: int
+    url: str
 
 
 class ShowResponseModel(BaseModel):

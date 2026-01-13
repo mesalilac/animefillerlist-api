@@ -2,7 +2,7 @@ from typing import Union
 
 from fastapi import FastAPI
 
-from app.scrape import get_shows_list
+from app.scrape import get_shows_list, get_show_by_slug
 
 app = FastAPI()
 
@@ -10,6 +10,11 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+
+@app.get("/shows/{slug}")
+def get_show(slug: str):
+    return get_show_by_slug(slug)
 
 
 @app.get("/shows")
