@@ -14,12 +14,12 @@ SHOWS_LIST_CACHE_TTL = 259200  # 3 days
 
 
 @app.get("/")
-def read_root():
+async def read_root():
     return {"Hello": "World"}
 
 
 @app.get("/shows/{slug}")
-def get_show(slug: str):
+async def get_show(slug: str):
     current_time = int(time.time())
 
     cached_item = show_cache.get(slug)
