@@ -2,6 +2,7 @@ import time
 
 from app.models import ShowResponseCacheModel, ShowsListResponseCacheModel
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
 from app.scrape import get_shows_list, get_show_by_slug
 
 app = FastAPI()
@@ -13,9 +14,9 @@ SHOW_CACHE_TTL = 43200  # 12 hours
 SHOWS_LIST_CACHE_TTL = 259200  # 3 days
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def read_root():
-    return {"Hello": "World"}
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/shows/{slug}")
