@@ -43,3 +43,13 @@ class ShowModel(BaseModel):
     name: str
     title: str
     url: str
+
+
+class ShowResponseCacheModel(BaseModel):
+    data: ShowResponseModel
+    last_updated_at: int
+
+
+class ShowsListResponseCacheModel(BaseModel):
+    data: list[ShowModel]
+    last_updated_at: int
