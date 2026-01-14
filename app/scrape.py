@@ -192,6 +192,9 @@ async def get_shows_list(
 
     show_list_div = soup.find("div", {"id": "ShowList"})
 
+    if not is_tag(show_list_div):
+        return results
+
     links_list = show_list_div.find_all("a")
 
     for link in links_list:
