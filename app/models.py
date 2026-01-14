@@ -5,6 +5,8 @@ from enum import Enum
 class InfoModel(BaseModel):
     title: str
     slug: str
+    mal_id: int | None
+    mal_url: str | None
     total_episodes: int
     total_fillers: int
     last_episode_aired_at: int
@@ -43,6 +45,8 @@ class ShowResponseModel(BaseModel):
 class ShowModel(BaseModel):
     title: str
     slug: str
+    mal_id: int | None
+    mal_url: str | None
     url: str
 
 

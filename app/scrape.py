@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup, element
 BASE_URL = "https://animefillerlist.com"
 SHOWS_BASE_URL = urljoin(BASE_URL, "shows/")
 
+MAL_ANIME_BASE_URL = "https://myanimelist.net/anime/"
+
 
 def is_tag(ele: element.Tag | element.NavigableString | None) -> TypeGuard[element.Tag]:
     return isinstance(ele, element.Tag)
@@ -33,7 +35,9 @@ def expand_ranges(range_strings: list[str]) -> list[int]:
 
 
 async def get_show_by_slug(
-    client: httpx.AsyncClient, slug: str
+    client: httpx.AsyncClient,
+    slug: str,
+    slug_to_mal_mapping: dict[str, int] | None = None,
 ) -> ShowResponseModel | None:
     manga_canon_episodes_list: list[int] = []
     mixed_canon_filler_episodes_list: list[int] = []
@@ -136,9 +140,19 @@ async def get_show_by_slug(
         if is_tag(h1_tag):
             title = h1_tag.get_text().rstrip("Filler List")
 
+    mal_id: int | None = None
+    mal_url: str | None = None
+
+    if slug_to_mal_mapping is not None:
+        mal_id = slug_to_mal_mapping.get(slug)
+        if mal_id:
+            mal_url = urljoin(MAL_ANIME_BASE_URL, str(mal_id))
+
     info_model = InfoModel(
         title=title,
         slug=slug,
+        mal_id=mal_id,
+        mal_url=mal_url,
         total_episodes=len(episodes_list),
         total_fillers=len(filler_episodes_list),
         last_episode_aired_at=episodes_list[-1].aired_at,
@@ -160,7 +174,9 @@ async def get_show_by_slug(
     return show_response_model
 
 
-async def get_shows_list(client: httpx.AsyncClient) -> list[ShowModel]:
+async def get_shows_list(
+    client: httpx.AsyncClient, slug_to_mal_mapping: dict[str, int] | None = None
+) -> list[ShowModel]:
     results: list[ShowModel] = []
 
     try:
@@ -183,6 +199,22 @@ async def get_shows_list(client: httpx.AsyncClient) -> list[ShowModel]:
         title = link.get_text()
         slug = url.split("/")[-1]
 
-        results.append(ShowModel(title=title, slug=slug, url=urljoin(BASE_URL, url)))
+        mal_id: int | None = None
+        mal_url: str | None = None
+
+        if slug_to_mal_mapping is not None:
+            mal_id = slug_to_mal_mapping.get(slug)
+            if mal_id:
+                mal_url = urljoin(MAL_ANIME_BASE_URL, str(mal_id))
+
+        results.append(
+            ShowModel(
+                title=title,
+                slug=slug,
+                mal_id=mal_id,
+                mal_url=mal_url,
+                url=urljoin(BASE_URL, url),
+            )
+        )
 
     return results

@@ -9,7 +9,10 @@ from app.scrape import get_shows_list, get_show_by_slug
 from contextlib import asynccontextmanager
 
 with open("mal_mapping.json", "r", encoding="utf-8") as f:
-    mal_to_slug = json.load(f)
+    mal_to_slug_mapping: dict[str, str] = json.load(f)
+    slug_to_mal_mapping: dict[str, int] = {
+        v: int(k) for k, v in mal_to_slug_mapping.items()
+    }
 
 
 @asynccontextmanager
@@ -41,7 +44,7 @@ async def get_show(slug_or_id: str):
     current_time = int(time.time())
 
     if slug_or_id.isdigit():
-        slug = mal_to_slug.get(slug_or_id)
+        slug = mal_to_slug_mapping.get(slug_or_id)
         if not slug:
             raise HTTPException(status_code=404, detail="MAL ID not found in mapping")
     else:
@@ -52,7 +55,7 @@ async def get_show(slug_or_id: str):
     if cached_item and current_time - cached_item.last_updated_at < SHOW_CACHE_TTL:
         return cached_item.data
 
-    new_data = await get_show_by_slug(client, slug)
+    new_data = await get_show_by_slug(client, slug, slug_to_mal_mapping)
 
     if new_data is None:
         raise HTTPException(status_code=404, detail="Show not found!")
@@ -77,7 +80,7 @@ async def get_shows():
     ):
         return shows_list_cache.data
 
-    new_data = await get_shows_list(client)
+    new_data = await get_shows_list(client, slug_to_mal_mapping)
 
     shows_list_cache = ShowsListResponseCacheModel(
         data=new_data, last_updated_at=current_time
