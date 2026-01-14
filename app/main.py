@@ -9,7 +9,8 @@ from app.models import (
     ShowResponseCacheModel,
     ShowsListResponseCacheModel,
 )
-from fastapi import FastAPI, APIRouter, HTTPException
+from rapidfuzz import process, fuzz
+from fastapi import FastAPI, APIRouter, Query, HTTPException
 from fastapi.responses import RedirectResponse
 from app.scrape import get_shows_list, get_show_by_slug
 from contextlib import asynccontextmanager
@@ -51,6 +52,53 @@ async def root():
 @app.get("/api/docs", include_in_schema=False)
 async def redirect_to_docs():
     return RedirectResponse(url=API_DOCS_URL, status_code=301)
+
+
+@router.get(
+    "/search",
+    response_model=list[ShowModel],
+    responses={
+        502: {
+            "model": Message,
+            "description": "Failed to connect to animefillerlist.com or failed to parse document",
+        },
+    },
+)
+async def search_shows(
+    q: str = Query(..., min_length=1, description="Anime title to search for"),
+    limit: int = 5,
+):
+    global shows_list_cache
+    client: httpx.AsyncClient = app.state.httpx_client
+
+    query = q.lower()
+
+    current_time = int(time.time())
+
+    if (
+        shows_list_cache is not None
+        and current_time - shows_list_cache.last_updated_at < SHOWS_LIST_CACHE_TTL
+    ):
+        new_data = await get_shows_list(client, slug_to_mal_mapping)
+
+        shows_list_cache = ShowsListResponseCacheModel(
+            data=new_data, last_updated_at=current_time
+        )
+
+    if shows_list_cache is None:
+        raise HTTPException(status_code=502, detail="Failed to fetch shows list")
+
+    titles = [show.title for show in shows_list_cache.data]
+
+    matches = process.extract(
+        query, titles, scorer=fuzz.WRatio, limit=limit, score_cutoff=60
+    )
+
+    results: list[ShowModel] = [
+        shows_list_cache.data[index] for _, score, index in matches
+    ]
+
+    return results
 
 
 @router.get(
