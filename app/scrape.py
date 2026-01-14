@@ -127,7 +127,17 @@ async def get_show_by_slug(
 
         last_updated_at = int(dt.timestamp())
 
+    main_div = soup.select_one("div.Right:nth-of-type(2)")
+    title: str = slug
+
+    if is_tag(main_div):
+        h1_tag = main_div.find("h1")
+
+        if is_tag(h1_tag):
+            title = h1_tag.get_text().rstrip("Filler List")
+
     info_model = InfoModel(
+        title=title,
         slug=slug,
         total_episodes=len(episodes_list),
         total_fillers=len(filler_episodes_list),
