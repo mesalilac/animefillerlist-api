@@ -1,11 +1,22 @@
 import time
+import httpx
 
 from app.models import ShowResponseCacheModel, ShowsListResponseCacheModel
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 from app.scrape import get_shows_list, get_show_by_slug
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.httpx_client = httpx.AsyncClient()
+    yield
+
+    await app.state.httpx_client.aclose()
+
+
+app = FastAPI(lifespan=lifespan)
 
 show_cache: dict[str, ShowResponseCacheModel] = {}
 shows_list_cache: ShowsListResponseCacheModel | None = None
@@ -21,6 +32,8 @@ async def read_root():
 
 @app.get("/shows/{slug}")
 async def get_show(slug: str):
+    client: httpx.AsyncClient = app.state.httpx_client
+
     current_time = int(time.time())
 
     cached_item = show_cache.get(slug)
@@ -28,7 +41,7 @@ async def get_show(slug: str):
     if cached_item and current_time - cached_item.last_updated_at < SHOW_CACHE_TTL:
         return cached_item.data
 
-    new_data = await get_show_by_slug(slug)
+    new_data = await get_show_by_slug(client, slug)
 
     if new_data is None:
         raise HTTPException(status_code=404, detail="Show not found!")
@@ -43,6 +56,8 @@ async def get_show(slug: str):
 @app.get("/shows")
 async def get_shows():
     global shows_list_cache
+    client: httpx.AsyncClient = app.state.httpx_client
+
     current_time = int(time.time())
 
     if (
@@ -51,7 +66,7 @@ async def get_shows():
     ):
         return shows_list_cache.data
 
-    new_data = await get_shows_list()
+    new_data = await get_shows_list(client)
 
     shows_list_cache = ShowsListResponseCacheModel(
         data=new_data, last_updated_at=current_time

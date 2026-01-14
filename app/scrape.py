@@ -32,7 +32,9 @@ def expand_ranges(range_strings: list[str]) -> list[int]:
     return expanded_list
 
 
-async def get_show_by_slug(slug: str) -> ShowResponseModel | None:
+async def get_show_by_slug(
+    client: httpx.AsyncClient, slug: str
+) -> ShowResponseModel | None:
     manga_canon_episodes_list: list[int] = []
     mixed_canon_filler_episodes_list: list[int] = []
     filler_episodes_list: list[int] = []
@@ -42,13 +44,12 @@ async def get_show_by_slug(slug: str) -> ShowResponseModel | None:
 
     url = urljoin(SHOWS_BASE_URL, slug)
 
-    async with httpx.AsyncClient() as client:
-        try:
-            res = await client.get(url, follow_redirects=True)
-            if res.status_code != 200:
-                return None
-        except httpx.RequestError:
+    try:
+        res = await client.get(url, follow_redirects=True)
+        if res.status_code != 200:
             return None
+    except httpx.RequestError:
+        return None
 
     html = res.content
 
@@ -149,16 +150,15 @@ async def get_show_by_slug(slug: str) -> ShowResponseModel | None:
     return show_response_model
 
 
-async def get_shows_list() -> list[ShowModel]:
+async def get_shows_list(client: httpx.AsyncClient) -> list[ShowModel]:
     results: list[ShowModel] = []
 
-    async with httpx.AsyncClient() as client:
-        try:
-            res = await client.get(SHOWS_BASE_URL, follow_redirects=True)
-            if res.status_code != 200:
-                return results
-        except httpx.RequestError:
+    try:
+        res = await client.get(SHOWS_BASE_URL, follow_redirects=True)
+        if res.status_code != 200:
             return results
+    except httpx.RequestError:
+        return results
 
     html = res.content
 
