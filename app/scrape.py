@@ -114,10 +114,10 @@ async def get_show_by_slug(
 
                 episode = EpisodeModel(
                     number=ep_number,
-                    title=title,
+                    title=title.strip(),
                     type=ep_type,
                     aired_at=timestamp,
-                    url=ep_url,
+                    url=ep_url.strip(),
                 )
 
                 episodes_list.append(episode)
@@ -153,15 +153,15 @@ async def get_show_by_slug(
             mal_url = urljoin(MAL_ANIME_BASE_URL, str(mal_id))
 
     info_model = InfoModel(
-        title=title,
-        slug=slug,
+        title=title.strip(),
+        slug=slug.strip(),
         mal_id=mal_id,
         mal_url=mal_url,
         total_episodes=len(episodes_list),
         total_fillers=len(filler_episodes_list),
         last_episode_aired_at=episodes_list[-1].aired_at,
         last_updated_at=last_updated_at,
-        url=url,
+        url=url.strip(),
     )
 
     group_model = GroupModel(
@@ -219,8 +219,8 @@ async def get_shows_list(
 
         results.append(
             ShowModel(
-                title=title,
-                slug=slug,
+                title=title.strip(),
+                slug=slug.strip(),
                 mal_id=mal_id,
                 mal_url=mal_url,
                 url=urljoin(BASE_URL, url),
