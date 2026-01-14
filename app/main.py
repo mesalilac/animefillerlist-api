@@ -1,11 +1,15 @@
 import time
 import httpx
+import json
 
 from app.models import ShowResponseCacheModel, ShowsListResponseCacheModel
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 from app.scrape import get_shows_list, get_show_by_slug
 from contextlib import asynccontextmanager
+
+with open("mal_mapping.json", "r", encoding="utf-8") as f:
+    mal_to_slug = json.load(f)
 
 
 @asynccontextmanager
@@ -30,11 +34,18 @@ async def read_root():
     return RedirectResponse(url="/docs")
 
 
-@app.get("/shows/{slug}")
-async def get_show(slug: str):
+@app.get("/shows/{slug_or_id}")
+async def get_show(slug_or_id: str):
     client: httpx.AsyncClient = app.state.httpx_client
 
     current_time = int(time.time())
+
+    if slug_or_id.isdigit():
+        slug = mal_to_slug.get(slug_or_id)
+        if not slug:
+            raise HTTPException(status_code=404, detail="MAL ID not found in mapping")
+    else:
+        slug = slug_or_id
 
     cached_item = show_cache.get(slug)
 
