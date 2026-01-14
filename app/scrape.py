@@ -128,7 +128,7 @@ async def get_show_by_slug(slug: str) -> ShowResponseModel | None:
 
     info_model = InfoModel(
         show_name=slug,
-        total_episodes=len(episodes_list) - 1,
+        total_episodes=len(episodes_list),
         total_fillers=len(filler_episodes_list),
         last_episode_aired_at=episodes_list[-1].aired_at,
         last_updated_at=last_updated_at,
