@@ -40,8 +40,8 @@ class ShowResponseModel(BaseModel):
 
 
 class ShowModel(BaseModel):
-    name: str
     title: str
+    slug: str
     url: str
 
 

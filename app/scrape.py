@@ -171,8 +171,8 @@ async def get_shows_list(client: httpx.AsyncClient) -> list[ShowModel]:
     for link in links_list:
         url = link["href"]
         title = link.get_text()
-        name = url.split("/")[-1]
+        slug = url.split("/")[-1]
 
-        results.append(ShowModel(name=name, title=title, url=urljoin(BASE_URL, url)))
+        results.append(ShowModel(title=title, slug=slug, url=urljoin(BASE_URL, url)))
 
     return results
